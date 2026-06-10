@@ -90,8 +90,13 @@ class PDFHandler:
     def print_preview(self):
         if not self.doc:
             return
-        
+          
         printer = QPrinter()
         preview = QPrintPreviewDialog(printer)
         preview.paintRequested.connect(lambda p: self._paint_pages(p))
         preview.exec()
+
+    def get_page_count(self):
+        if self.doc:
+            return len(self.doc)
+        return 0

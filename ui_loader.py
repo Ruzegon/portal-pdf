@@ -3,6 +3,7 @@ from PySide6.QtWidgets import QFileDialog
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import QFile
 from pdf_handler import PDFHandler
+import os
 
 class MainWindow:
     def __init__(self):
@@ -35,3 +36,7 @@ class MainWindow:
 
         if file_path:
             self.pdf_handler.load_pdf(file_path)
+            filename = os.path.basename(file_path)
+            self.ui.setWindowTitle(f"Portal PDF - {filename}")
+            page_count = self.pdf_handler.get_page_count()
+            self.ui.statusBar().showMessage(f"Pages: {page_count}")
