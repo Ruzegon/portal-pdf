@@ -1,12 +1,14 @@
 # ui_loader.py
-from PySide6.QtWidgets import QFileDialog
+from PySide6.QtWidgets import QFileDialog, QApplication
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtCore import QFile
+from PySide6.QtCore import QFile, Qt, QObject
+from PySide6.QtGui import QWheelEvent
 from pdf_handler import PDFHandler
 import os
 
-class MainWindow:
+class MainWindow(QObject):
     def __init__(self):
+        super().__init__()
         loader = QUiLoader()
 
         file = QFile("mainwindow.ui")
@@ -16,6 +18,9 @@ class MainWindow:
         file.close()
         
         self.pdf_handler = PDFHandler(self.ui.pdfView)
+        
+        self.ui.pdfView.installEventFilter(self)
+        self.ui.pdfView.viewport().installEventFilter(self)
 
         self.ui.buttonOpen.clicked.connect(self.open_pdf)
         self.ui.actionZoomIn.triggered.connect(self.pdf_handler.zoom_in)
@@ -46,3 +51,13 @@ class MainWindow:
             current = self.pdf_handler.get_current_page()
             total = self.pdf_handler.get_page_count()
             self.ui.statusBar().showMessage(f"Page {current} of {total}")
+    
+    def eventFilter(self, obj, event):
+        if isinstance(event, QWheelEvent) and obj == self.ui.pdfView.viewport():
+            if event.modifiers() & Qt.KeyboardModifier.ControlModifier:
+                if event.angleDelta().y() > 0:
+                    self.pdf_handler.zoom_in()
+                else:
+                    self.pdf_handler.zoom_out()
+                return True
+        return False
