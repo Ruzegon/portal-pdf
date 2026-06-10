@@ -22,6 +22,7 @@ class MainWindow:
         self.ui.actionZoomOut.triggered.connect(self.pdf_handler.zoom_out)
         self.ui.actionPrint.triggered.connect(lambda: self.pdf_handler.print_pdf())
         self.ui.actionPrintPreview.triggered.connect(lambda: self.pdf_handler.print_preview())
+        self.ui.pdfView.verticalScrollBar().valueChanged.connect(self.update_page_indicator)
 
     def show(self):
         self.ui.show()
@@ -38,5 +39,10 @@ class MainWindow:
             self.pdf_handler.load_pdf(file_path)
             filename = os.path.basename(file_path)
             self.ui.setWindowTitle(f"Portal PDF - {filename}")
-            page_count = self.pdf_handler.get_page_count()
-            self.ui.statusBar().showMessage(f"Pages: {page_count}")
+            self.update_page_indicator()
+    
+    def update_page_indicator(self):
+        if self.pdf_handler.doc:
+            current = self.pdf_handler.get_current_page()
+            total = self.pdf_handler.get_page_count()
+            self.ui.statusBar().showMessage(f"Page {current} of {total}")

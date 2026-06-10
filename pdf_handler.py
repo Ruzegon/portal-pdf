@@ -100,3 +100,11 @@ class PDFHandler:
         if self.doc:
             return len(self.doc)
         return 0
+    
+    def get_current_page(self):
+        scroll_y = self.scroll_area.verticalScrollBar().value()
+        total_height = self.scroll_area.verticalScrollBar().maximum()
+        if total_height == 0:
+            return 1
+        current = ((scroll_y / total_height) * len(self.doc)) + 1
+        return max(1, min(int(current), len(self.doc)))
