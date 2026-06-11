@@ -1,9 +1,10 @@
 # ui_loader.py
-from PySide6.QtWidgets import QFileDialog, QApplication, QLineEdit, QToolBar, QWidget, QPushButton
+from PySide6.QtWidgets import QFileDialog, QApplication, QLineEdit, QToolBar, QWidget, QPushButton, QDialog
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import QFile, Qt, QObject
 from PySide6.QtGui import QWheelEvent, QKeyEvent
 from pdf_handler import PDFHandler
+from organize_dialog import OrganizeDialog
 import os
 
 class MainWindow(QObject):
@@ -32,6 +33,9 @@ class MainWindow(QObject):
         self.ui.pdfView.verticalScrollBar().valueChanged.connect(self.update_page_indicator)
         self.ui.actionFind.triggered.connect(self.toggle_search)
         self.ui.actionOpen_menu.triggered.connect(self.open_pdf)
+        self.ui.buttonOrganize.clicked.connect(self.open_organize_dialog)
+        self.ui.actionSave.triggered.connect(self.save_pdf)
+        self.ui.actionSave_As.triggered.connect(self.save_pdf_as)
 
     def show(self):
         self.ui.show()
@@ -99,4 +103,31 @@ class MainWindow(QObject):
     def do_search(self):
         query = self.search_bar.text()
         if query:
-            self.pdf_handler.search_text(query)        
+            self.pdf_handler.search_text(query)
+    
+    def open_organize_dialog(self):
+        if not self.pdf_handler.doc:
+            return
+        
+        dialog = OrganizeDialog(self.pdf_handler.doc, self.ui)
+        if dialog.exec() == QDialog.Accepted:
+            new_order = dialog.get_new_order()
+            self.pdf_handler.apply_organize(new_order)
+            self.update_page_indicator()
+    
+    def save_pdf(self):
+        if not self.pdf_handler.doc:
+            return
+        self.pdf_handler.save_pdf()
+
+    def save_pdf_as(self):
+        if not self.pdf_handler.doc:
+            return
+        file_path, _ = QFileDialog.getSaveFileName(
+            self.ui,
+            "Save PDF As",
+            "",
+            "PDF Files (*.pdf)"
+        )
+        if file_path:
+            self.pdf_handler.save_pdf_as(file_path)
