@@ -23,7 +23,7 @@ pip install pyside6 pymupdf
 ### 3. Clone The Repository
 
 ```bash
-git clone https://github.com/yourusername/portal-pdf.git
+git clone https://github.com/Ruzegon/portal-pdf.git
 cd portal-pdf
 ```
 
