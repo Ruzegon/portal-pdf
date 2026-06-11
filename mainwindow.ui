@@ -119,6 +119,13 @@
           </property>
          </widget>
         </item>
+        <item>
+         <widget class="QPushButton" name="buttonOrganize">
+          <property name="text">
+           <string>Organize</string>
+          </property>
+         </widget>
+        </item>
        </layout>
       </widget>
      </item>

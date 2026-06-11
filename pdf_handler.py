@@ -2,7 +2,7 @@
 import fitz
 from PySide6.QtWidgets import QLabel, QWidget, QVBoxLayout
 from PySide6.QtPrintSupport import QPrinter, QPrintDialog, QPrintPreviewDialog
-from PySide6.QtGui import QPixmap, QImage, QPainter
+from PySide6.QtGui import QColor, QPixmap, QImage, QPainter
 from PySide6.QtCore import Qt
 
 class PDFHandler:
@@ -11,6 +11,8 @@ class PDFHandler:
         self.scroll_area = scroll_area
         self.zoom_factor = 1.0
         self.base_dpi = 3.0
+        
+        self.search_term = ""
 
     def load_pdf(self, file_path):
         # open PDF
@@ -35,6 +37,24 @@ class PDFHandler:
                 int(page.rect.width * self.zoom_factor * (96/72)),
                 Qt.TransformationMode.SmoothTransformation
             )
+
+            results = page.search_for(self.search_term) if self.search_term else []
+            if results:
+                painter = QPainter(scaled)
+                painter.setBrush(QColor(255, 255, 0, 128))
+                painter.setPen(Qt.PenStyle.NoPen)
+                
+                scale_x = scaled.width() / qt_image.width()
+                scale_y = scaled.height() / qt_image.height()
+                render_scale = self.base_dpi * self.zoom_factor
+                for rect in results:
+                    painter.drawRect(
+                        int(rect.x0 * render_scale * scale_x),
+                        int(rect.y0 * render_scale * scale_y),
+                        int((rect.x1 - rect.x0) * render_scale * scale_x),
+                        int((rect.y1 - rect.y0) * render_scale * scale_y)
+                    )
+                painter.end()
 
             label = QLabel()
             label.setPixmap(scaled)
@@ -108,3 +128,23 @@ class PDFHandler:
             return 1
         current = ((scroll_y / total_height) * len(self.doc)) + 1
         return max(1, min(int(current), len(self.doc)))
+
+    def search_text(self, search_term):
+        self.search_term = search_term
+        self.render_pages()
+    
+    def clear_search(self):
+        self.search_term = ""
+        self.render_pages()
+    
+    def apply_organize(self, new_order):
+        if not self.doc:
+            return
+        
+        new_doc = fitz.open()
+        for page_num in new_order:
+            new_doc.insert_pdf(self.doc, from_page=page_num, to_page=page_num)
+        
+        self.doc.close()
+        self.doc = new_doc
+        self.render_pages()
