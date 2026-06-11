@@ -2,7 +2,7 @@
 from PySide6.QtWidgets import QFileDialog, QApplication, QLineEdit, QToolBar, QWidget, QPushButton
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtCore import QFile, Qt, QObject
-from PySide6.QtGui import QWheelEvent
+from PySide6.QtGui import QWheelEvent, QKeyEvent
 from pdf_handler import PDFHandler
 import os
 
@@ -21,6 +21,7 @@ class MainWindow(QObject):
         self.setup_search_bar()
         
         self.ui.pdfView.installEventFilter(self)
+        self.ui.installEventFilter(self)
         self.ui.pdfView.viewport().installEventFilter(self)
 
         self.ui.buttonOpen.clicked.connect(self.open_pdf)
@@ -30,6 +31,7 @@ class MainWindow(QObject):
         self.ui.actionPrintPreview.triggered.connect(lambda: self.pdf_handler.print_preview())
         self.ui.pdfView.verticalScrollBar().valueChanged.connect(self.update_page_indicator)
         self.ui.actionFind.triggered.connect(self.toggle_search)
+        self.ui.actionOpen_menu.triggered.connect(self.open_pdf)
 
     def show(self):
         self.ui.show()
@@ -62,6 +64,12 @@ class MainWindow(QObject):
                 else:
                     self.pdf_handler.zoom_out()
                 return True
+
+        if isinstance(event, QKeyEvent):
+            if event.key() == Qt.Key.Key_Escape:
+                if not self.search_toolbar.isHidden():
+                    self.toggle_search()
+                    return True
         return False
     
     def setup_search_bar(self):       
