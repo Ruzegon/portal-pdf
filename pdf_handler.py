@@ -13,10 +13,13 @@ class PDFHandler:
         self.base_dpi = 3.0
         
         self.search_term = ""
+        
+        self.current_file_path = None
 
     def load_pdf(self, file_path):
         # open PDF
         self.doc = fitz.open(file_path)
+        self.current_file_path = file_path
         self.render_pages()         
     
     def render_pages(self):
@@ -148,3 +151,20 @@ class PDFHandler:
         self.doc.close()
         self.doc = new_doc
         self.render_pages()
+    
+    def save_pdf(self, file_path=None):
+        if not self.doc:
+            return
+        
+        if file_path is None:
+            file_path = self.current_file_path
+        
+        if file_path:
+            self.doc.save(file_path)
+    
+    def save_pdf_as(self, file_path):
+        if not self.doc:
+            return
+        
+        self.doc.save(file_path)
+        self.current_file_path = file_path
