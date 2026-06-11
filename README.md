@@ -38,9 +38,7 @@ python main.py
 ## Features
 
 - Open PDF
-- Zoom
-- Search
-- Print
+- Organize pages
 
 ---
 
