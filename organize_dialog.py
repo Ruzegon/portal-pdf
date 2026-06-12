@@ -1,6 +1,6 @@
 # organize_dialog.py
 import fitz
-from PySide6.QtWidgets import QDialog, QListWidget, QListWidgetItem, QPushButton, QVBoxLayout, QHBoxLayout, QAbstractItemView
+from PySide6.QtWidgets import QDialog, QListWidget, QListWidgetItem, QMenu, QPushButton, QVBoxLayout, QHBoxLayout, QAbstractItemView
 from PySide6.QtGui import QPixmap, QImage, QIcon
 from PySide6.QtCore import Qt, QSize
 
@@ -18,6 +18,8 @@ class OrganizeDialog(QDialog):
         self.list_widget.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.list_widget.setDragDropMode(QAbstractItemView.DragDropMode.InternalMove)
         self.list_widget.setDefaultDropAction(Qt.DropAction.MoveAction)
+        self.list_widget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.list_widget.customContextMenuRequested.connect(self.show_context_menu)
         self.load_thumbnails()
         
         # button
@@ -61,3 +63,38 @@ class OrganizeDialog(QDialog):
             original_index = item.data(Qt.ItemDataRole.UserRole)
             new_order.append(original_index)
         return new_order
+    
+    def show_context_menu(self, pos):
+        item = self.list_widget.itemAt(pos)
+        if not item:
+            return
+        
+        page_num = item.data(Qt.ItemDataRole.UserRole)
+        
+        menu = QMenu()
+        rotRightAction = menu.addAction("Rotate Right")
+        rotLeftAction = menu.addAction("Rotate Left")
+        menu.addSeparator()
+        deleteAction = menu.addAction("Delete page")
+        action = menu.exec(self.list_widget.mapToGlobal(pos))
+        
+        if action == rotRightAction:
+            self.doc[page_num].set_rotation((self.doc[page_num].rotation + 90) % 360)
+            item.setIcon(QIcon(self.load_thumbnail(page_num)))
+        elif action == rotLeftAction:
+            self.doc[page_num].set_rotation((self.doc[page_num].rotation - 90) % 360)
+            item.setIcon(QIcon(self.load_thumbnail(page_num)))
+        elif action == deleteAction:
+            self.delete_page(page_num)
+    
+    def rotate_page(self, page_num, angle):
+        self.doc[page_num].set_rotation((self.doc[page_num].rotation + angle) % 360)
+        item = self.list_widget.findItems(f"Page {page_num+1}", Qt.MatchFlag.MatchExactly)[0]
+        item.setIcon(QIcon(self.load_thumbnail(page_num)))
+    
+    def delete_page(self, page_num):
+        for i in range(self.list_widget.count()):
+            item = self.list_widget.item(i)
+            if item.data(Qt.ItemDataRole.UserRole) == page_num:
+                self.list_widget.takeItem(i)
+                break
